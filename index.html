@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://translate.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <link rel="icon" type="image/png" href="/logo.png" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#362a7b">
   <title>VoteIndia | Smart Election Dashboard</title>
   <meta name="description" content="An advanced interactive assistant for Indian elections. Neutral, data-driven, and empowering citizens." />
   <!-- High Priority Preloads for Encyclopedia -->
@@ -16,6 +21,7 @@
   <link rel="preload" as="image" href="/evm_machine_premium.png">
   <link rel="preload" as="image" href="/evm_voting_premium.png">
   <link rel="stylesheet" href="/src/style.css">
+  <link rel="manifest" href="/manifest.json">
   <style>
     /* Assistant Scrollbar */
     #assistant-messages::-webkit-scrollbar { width: 4px; }
@@ -162,6 +168,10 @@
           <span>VoteIndia</span>
         </div>
         <div class="user-profile" style="display: flex; align-items: center; gap: 1rem;">
+          <button id="custom-language-trigger" class="btn btn-sm" style="background: rgba(54, 42, 123, 0.05); border: 1px solid rgba(54, 42, 123, 0.1); border-radius: 50px; display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--chakra);">
+            <span>🌐</span> Select Language
+          </button>
+          <div id="google_translate_element" style="position: absolute; opacity: 0; pointer-events: none; visibility: hidden;"></div>
           <span id="user-email" style="cursor: pointer; font-weight: 600; text-decoration: underline; color: var(--chakra);" title="Click to update profile"></span>
           <button id="logout-btn" class="btn btn-sm">Logout</button>
         </div>
@@ -438,7 +448,7 @@
       <!-- Section 1: The Machine -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center;" class="reveal">
         <div class="parallax-wrap" style="width: 100%; height: 350px; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
-          <img src="/evm_machine_premium.png" alt="EVM Machine" class="parallax-inner" style="width: 100%; height: 100%; object-fit: cover;">
+          <img src="/evm_machine_premium.png" alt="EVM Machine" class="parallax-inner" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy">
         </div>
         <div>
           <span style="color: var(--chakra); font-weight: 800; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;">01 • Technology</span>
@@ -457,11 +467,23 @@
       <!-- Section 2: Casting Vote -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center;" class="reveal">
         <div style="order: 2;" class="parallax-wrap" style="width: 100%; height: 350px; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
-          <img src="/evm_voting_premium.png" alt="Voting Process" class="parallax-inner" style="width: 100%; height: 100%; object-fit: cover;">
+          <img src="/evm_voting_premium.png" alt="Voting Process" class="parallax-inner" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy">
         </div>
         <div style="order: 1;">
           <span style="color: var(--chakra); font-weight: 800; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;">02 • Process</span>
           <h2 style="color: var(--chakra); font-size: 2.2rem; margin: 0.5rem 0 1.5rem 0;">Casting Your Vote</h2>
+          <div class="evm-step" style="display: none; animation: fadeIn 0.5s ease-out;">
+            <img src="/evm_setup.png" alt="EVM Setup" style="width: 100%; border-radius: 12px; margin-bottom: 1rem;" loading="lazy">
+            <p><strong>Step 1: Setup</strong> - The Presiding Officer enables the Ballot Unit after verifying your identity.</p>
+          </div>
+          <div class="evm-step" style="display: none;">
+            <img src="/evm_ballot.png" alt="EVM Ballot" style="width: 100%; border-radius: 12px; margin-bottom: 1rem;" loading="lazy">
+            <p><strong>Step 2: Cast Vote</strong> - Press the blue button next to your chosen candidate's name/symbol.</p>
+          </div>
+          <div class="evm-step" style="display: none;">
+            <img src="/evm_vvpat.png" alt="VVPAT Verification" style="width: 100%; border-radius: 12px; margin-bottom: 1rem;" loading="lazy">
+            <p><strong>Step 3: Verify</strong> - A slip appears in the VVPAT window for 7 seconds showing your choice.</p>
+          </div>
           <ol style="color: var(--text); font-size: 1.05rem; line-height: 1.8; padding-left: 1.2rem; margin: 0;">
             <li style="margin-bottom: 0.5rem;">The Presiding Officer presses "Ballot" on the Control Unit to activate your Balloting Unit.</li>
             <li style="margin-bottom: 0.5rem;">Enter the voting compartment. A <strong>green light</strong> will be glowing on the EVM.</li>
@@ -502,7 +524,7 @@
   </section>
 
   <!-- AI Assistant & Navigation -->
-  <button id="assistant-toggle" aria-label="Open AI Assistant" style="position: fixed; bottom: 2rem; right: 2rem; width: 60px; height: 60px; background: linear-gradient(135deg, var(--chakra), #4f46e5); border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; cursor: pointer; box-shadow: 0 10px 30px rgba(54, 42, 123, 0.3); z-index: 1000; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);">
+  <button id="assistant-toggle" aria-label="Open AI Assistant" aria-expanded="false" aria-controls="assistant-panel" style="position: fixed; bottom: 2rem; right: 2rem; width: 60px; height: 60px; background: linear-gradient(135deg, var(--chakra), #4f46e5); border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; cursor: pointer; box-shadow: 0 10px 30px rgba(54, 42, 123, 0.3); z-index: 1000; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);">
     <div style="font-family: 'Outfit'; font-weight: 800; font-size: 1.2rem;">IN</div>
   </button>
 
@@ -519,6 +541,40 @@
       <div id="assistant-options" style="display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: flex-start;"></div>
     </div>
   </div>
+
+  <!-- Language Selection Modal -->
+  <div id="language-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); z-index: 5000; align-items: center; justify-content: center; padding: 2rem;">
+    <div style="background: white; width: 100%; max-width: 900px; border-radius: 40px; padding: 3rem; position: relative; box-shadow: 0 40px 100px rgba(0,0,0,0.2); animation: modalFloatUp 0.5s cubic-bezier(0.23, 1, 0.32, 1);">
+      <button id="close-lang-modal" style="position: absolute; top: 2rem; right: 2rem; background: #f1f5f9; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 1.5rem; color: var(--chakra); transition: all 0.2s;">&times;</button>
+      
+      <div style="text-align: center; margin-bottom: 3rem;">
+        <h2 style="font-family: 'Outfit'; font-size: 2.2rem; color: var(--chakra); margin-bottom: 0.75rem;">Choose Your Language</h2>
+        <p style="color: var(--text-light); font-size: 1.1rem;">Making democracy accessible in every corner of India.</p>
+      </div>
+      
+      <div id="language-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1.25rem; max-height: 55vh; overflow-y: auto; padding: 10px;">
+        <!-- Regional languages will be injected here -->
+      </div>
+      
+      <div style="margin-top: 3rem; display: flex; justify-content: center;">
+        <button id="reset-lang" class="btn" style="background: #f1f5f9; color: var(--chakra); font-weight: 700; padding: 1rem 2.5rem; border-radius: 50px;">Reset to English</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Google Translate Initialization -->
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'hi,bn,te,mr,ta,ur,gu,kn,ml,pa,as,ks,sd,mr,ne,or,sa,mai,doi,brx,mni,sat',
+        layout: google.translate.TranslateElement.InlineLayout.HORIZONTAL,
+        autoDisplay: false,
+        multilanguagePage: true
+      }, 'google_translate_element');
+    }
+  </script>
+  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 </body>
 </html>

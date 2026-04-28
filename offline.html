@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline Mode | VoteIndia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --saffron: #FF9933;
+            --white: #ffffff;
+            --green: #138808;
+            --chakra: #000080;
+            --text: #1e293b;
+            --text-light: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* Animated Tricolor Background */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            background: linear-gradient(-45deg, rgba(255,153,51,0.05), #ffffff, rgba(19,136,8,0.05));
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .offline-container {
+            width: 100%;
+            max-width: 600px;
+            padding: 2.5rem;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 40px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.08);
+            text-align: center;
+            position: relative;
+            animation: floatUp 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        @keyframes floatUp {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .pulse-icon {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--saffron), #ffb366);
+            border-radius: 30px;
+            margin: 0 auto 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            box-shadow: 0 15px 30px rgba(255, 153, 51, 0.3);
+        }
+
+        .pulse-icon::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 30px;
+            background: var(--saffron);
+            z-index: -1;
+            animation: ripple 2s ease-out infinite;
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(1); opacity: 0.6; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            color: var(--chakra);
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        p.subtitle {
+            color: var(--text-light);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2.5rem;
+        }
+
+        .emergency-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .info-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 20px;
+            border: 1px solid #f1f5f9;
+            text-align: left;
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--saffron);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+        }
+
+        .info-card .label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--saffron);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .info-card .value {
+            font-weight: 700;
+            color: var(--chakra);
+            font-size: 1rem;
+        }
+
+        .btn-action {
+            width: 100%;
+            padding: 1.25rem;
+            background: var(--chakra);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 15px 30px rgba(0, 0, 128, 0.2);
+        }
+
+        .btn-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(0, 0, 128, 0.3);
+            filter: brightness(1.1);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(19, 136, 8, 0.1);
+            color: var(--green);
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+
+    <div class="offline-container">
+        <div class="pulse-icon">📡</div>
+        
+        <h1>Connection Lost</h1>
+        <p class="subtitle">But your right to vote remains live. Here is the critical information you need right now.</p>
+
+        <div class="emergency-grid">
+            <div class="info-card">
+                <span class="label">ECI Helpline</span>
+                <span class="value">📞 1950</span>
+            </div>
+            <div class="info-card">
+                <span class="label">EVM Machine</span>
+                <span class="value">📟 Standalone (No Net)</span>
+            </div>
+            <div class="info-card" style="grid-column: span 2;">
+                <span class="label">Mandatory Documents</span>
+                <span class="value">🪪 Voter ID / Aadhar / Driving License</span>
+            </div>
+        </div>
+
+        <button class="btn-action" onclick="window.location.reload()">
+            <span>🔄</span> Try Reconnecting
+        </button>
+
+        <div class="badge">
+            <span style="width: 6px; height: 6px; background: var(--green); border-radius: 50%;"></span>
+            Local Cache Active
+        </div>
+    </div>
+
+    <script>
+        // Auto-refresh when internet comes back
+        window.addEventListener('online', () => {
+            window.location.href = '/';
+        });
+    </script>
+</body>
+</html>

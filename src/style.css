@@ -20,6 +20,76 @@
   box-shadow: 0 0 0 6px rgba(0, 0, 128, 0.1) !important;
 }
 
+/* Premium Google Translate UI Overhaul */
+#google_translate_element {
+  display: inline-block;
+  vertical-align: middle;
+}
+.goog-te-gadget-simple {
+  background: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(54, 42, 123, 0.15) !important;
+  padding: 10px 18px !important;
+  border-radius: 50px !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 0.9rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  cursor: pointer !important;
+}
+.goog-te-gadget-simple:hover {
+  background: white !important;
+  border-color: var(--saffron) !important;
+  box-shadow: 0 8px 25px rgba(54, 42, 123, 0.1) !important;
+  transform: translateY(-2px);
+}
+.goog-te-gadget-icon { display: none !important; }
+.goog-te-menu-value { display: flex !important; align-items: center !important; gap: 6px !important; }
+.goog-te-menu-value span:first-child { color: var(--chakra) !important; font-weight: 700 !important; }
+.goog-te-menu-value span:nth-child(3) { color: var(--saffron) !important; font-size: 0.7rem !important; } /* Arrow color */
+.goog-te-menu-value:before { content: "🌐"; font-size: 1rem; }
+.goog-te-banner-frame { display: none !important; }
+body { top: 0 !important; }
+
+/* Styling the actual Dropdown Menu (Internal Iframe/Overlay) */
+.goog-te-menu-frame {
+  box-shadow: 0 25px 50px rgba(0,0,0,0.15) !important;
+  border-radius: 20px !important;
+  border: none !important;
+}
+.goog-te-menu2 {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  padding: 1rem !important;
+  overflow: hidden !important;
+}
+.goog-te-menu2-item div, .goog-te-menu2-item:link div, .goog-te-menu2-item:visited div {
+  color: var(--chakra) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.9rem !important;
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  transition: all 0.2s !important;
+}
+.goog-te-menu2-item:hover div {
+  background: linear-gradient(135deg, rgba(255,153,51,0.1), rgba(19,136,8,0.1)) !important;
+  color: var(--chakra) !important;
+}
+
+/* Hide Google Footer */
+.goog-logo-link, .goog-te-gadget span { display: none !important; }
+.goog-te-gadget { color: transparent !important; }
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .goog-te-gadget-simple { padding: 8px 14px !important; font-size: 0.8rem !important; }
+}
+
 :root {
   --saffron: #FF9933;
   --white: #ffffff;
@@ -40,14 +110,79 @@
   box-sizing: border-box;
 }
 
+/* Smooth Scroll & Hardware Acceleration */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
-  font-family: 'Inter', sans-serif;
-  background: var(--bg);
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
+  background: var(--bg);
   overflow-x: hidden;
-  min-height: 100vh;
+  line-height: 1.6;
+  text-rendering: optimizeLegibility;
   user-select: none; /* Prevent accidental text selection */
   -webkit-user-select: none;
+}
+
+/* Optimize Performance for Glassmorphism */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  will-change: transform, opacity; /* Hint to GPU */
+}
+
+/* Responsive Container */
+.container {
+  width: 92%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Grid Layout Optimizations */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+/* Device Specific Layouts */
+@media (max-width: 1200px) {
+  .dashboard-grid { gap: 1rem; }
+}
+
+@media (max-width: 992px) {
+  .dashboard-grid {
+    display: flex;
+    flex-direction: column;
+  }
+  .hero-dashboard {
+    padding: 3rem 0;
+    text-align: center;
+  }
+  #live-clock {
+    position: relative;
+    top: 0;
+    right: 0;
+    display: inline-block;
+    margin-bottom: 2rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .container { width: 95%; }
+  .logo span { font-size: 1.1rem; }
+  .user-profile span { display: none; } /* Hide email on tiny screens to save space */
+  header .container { justify-content: space-between; }
+  .hero-dashboard h1 { font-size: 2rem; }
+  .card { padding: 1.25rem; }
 }
 
 /* Allow selection in inputs and textareas */

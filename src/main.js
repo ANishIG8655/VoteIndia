@@ -9,12 +9,37 @@ import {
   deleteUser
 } from "firebase/auth";
 import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
-import { indiaElections, modes, getPersonalizedData, kycDatabase, electionQuiz } from './electionData.js';
+import { indiaElections, modes, getPersonalizedData, kycDatabase } from './electionData.js';
+import { startLiveClock, addToGoogleCalendar } from './services/sync.js';
+import { handleAuth, saveUserProfile, getUserProfile } from './services/auth.js';
+import { showToast, parseMarkdown } from './utils/ui.js';
+import { sanitizeName } from './utils/sanitizer.js';
+import { createTrendNode } from './components/Ticker.js';
+import { createMessageBubble, createOptionButton } from './components/Assistant.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   // Handle Global Splash Screen
   const splashScreen = document.getElementById('global-splash');
   const splashProgress = document.getElementById('splash-progress');
+
+  // Register Service Worker for Offline Support
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('VoteIndia SW Registered', reg))
+        .catch(err => console.log('SW Registration Failed', err));
+    });
+  }
+
+  // Instant Offline Detection
+  window.addEventListener('offline', () => {
+    window.location.href = '/offline.html';
+  });
+
+  // Re-check on load (if started offline)
+  if (!navigator.onLine) {
+    window.location.href = '/offline.html';
+  }
   
   const showSplash = (durationMs, callback) => {
     if(!splashScreen || !splashProgress) { if(callback) callback(); return; }
@@ -95,7 +120,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 4000); // Display for 4 seconds
   };
 
-  // --- Auth Logic ---
+  // Performance: Resource Pre-fetching
+  const prefetchAssets = () => {
+    const assets = ['/logo.png', '/evm_machine_premium.png', '/evm_voting_premium.png'];
+    assets.forEach(url => {
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.href = url;
+      document.head.appendChild(link);
+    });
+  };
+  window.addEventListener('load', prefetchAssets);
+
+  // Performance: Efficient Resize Handling
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      // Re-calculate layout-dependent elements if needed
+      if (assistantPanel.style.display === 'flex') {
+        assistantMessages.scrollTop = assistantMessages.scrollHeight;
+      }
+    }, 250);
+  });
+
+  // --- Core State ---
   const toggleAuthMode = (login) => {
     isLoginMode = login;
     tabLogin.classList.toggle('active', login);
@@ -641,6 +690,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const addMessage = (text, isUser = false) => {
     const msg = document.createElement('div');
+    msg.className = 'assistant-bubble-container'; // Tag for translator
     
     // Premium Markdown-lite Parsing
     let formattedText = text
@@ -666,6 +716,14 @@ document.addEventListener('DOMContentLoaded', () => {
     msg.innerHTML = formattedText;
     assistantMessages.appendChild(msg);
     assistantMessages.scrollTop = assistantMessages.scrollHeight;
+
+    // Nudge Google Translate to re-scan
+    const combo = document.querySelector('.goog-te-combo');
+    if (combo && combo.value) {
+      setTimeout(() => {
+        combo.dispatchEvent(new Event('change', { bubbles: true }));
+      }, 300);
+    }
   };
 
   const showOptions = (options) => {
@@ -804,7 +862,7 @@ Let's walk through it step-by-step.`);
         const data = getPersonalizedData(saved.state, saved.constituency);
         const candidateList = data.candidates.map(c => `• **${c.name}** (${c.party}): Focus on *${c.focus}*`).join('\n');
         
-        addMessage(`📍 **Personalized Insights for ${saved.constituency}, ${saved.state}**\n\n**Candidates & Local Focus:**\n${candidateList}\n\n**Local Manifesto Highlights:**\n${data.manifesto_highlight}\n\n**State & National Impact:**\n${data.cm_pm_prospects}`);
+        addMessage(`📍 **Personalized Insights for ${saved.constituency}, ${saved.state}**\n\n**Candidates & Local Focus:**\n${candidateList}\n\n**Local Manifesto Highlights:**\n${data.manifestoHighlight}\n\n**State & National Impact:**\n${data.prospects}`);
         showOptions([{id: 'manifesto', label: 'National Manifestos'}, {id: 'trends', label: 'Overall Trends'}]);
       }
     } else if (id === 'trends') {
@@ -817,10 +875,42 @@ Let's walk through it step-by-step.`);
     }
   };
 
-  assistantToggle.onclick = () => {
-    assistantPanel.style.display = assistantPanel.style.display === 'flex' ? 'none' : 'flex';
+  const toggleAssistant = () => {
+    const isVisible = assistantPanel.style.display === 'flex';
+    assistantPanel.style.display = isVisible ? 'none' : 'flex';
+    assistantToggle.setAttribute('aria-expanded', !isVisible);
+    
+    // Auto-welcome on first open
+    if (!isVisible && assistantMessages.children.length === 0) {
+      addMessage("Namaste! I am your VoteIndia Assistant. How can I help you today?");
+      showOptions(modes);
+    }
   };
-  closeAssistant.onclick = () => assistantPanel.style.display = 'none';
+
+  // Robust Event Delegation for the Toggle (Handles Translation DOM changes)
+  document.addEventListener('click', (e) => {
+    const toggleBtn = document.getElementById('assistant-toggle');
+    const panel = document.getElementById('assistant-panel');
+    
+    if (toggleBtn && (toggleBtn.contains(e.target) || e.target.id === 'assistant-toggle')) {
+      const isVisible = panel.style.display === 'flex';
+      panel.style.display = isVisible ? 'none' : 'flex';
+      toggleBtn.setAttribute('aria-expanded', !isVisible);
+      
+      // Auto-welcome on first open
+      const messages = document.getElementById('assistant-messages');
+      if (!isVisible && messages && messages.children.length === 0) {
+        addMessage("Namaste! I am your VoteIndia Assistant. How can I help you today?");
+        showOptions(modes);
+      }
+    }
+
+    // Close button logic
+    if (e.target.id === 'close-assistant' || e.target.closest('#close-assistant')) {
+      panel.style.display = 'none';
+      toggleBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
 
   // ==========================================
   // Premium UI JavaScript Effects
@@ -1043,21 +1133,119 @@ Let's walk through it step-by-step.`);
       inner.style.transition = `transform 0.1s ease-out`;
     });
   });
-  // --- EVM Explainer Screen Logic ---
-  const openEvmBtn = document.getElementById('open-evm-btn');
-  const evmScreen = document.getElementById('evm-screen');
-  const backToDashEvmBtn = document.getElementById('back-to-dash-evm');
+  const initEvmExplainer = () => {
+    const openEvmBtn = document.getElementById('open-evm-btn');
+    const evmScreen = document.getElementById('evm-screen');
+    const backToDashEvmBtn = document.getElementById('back-to-dash-evm');
 
-  if (openEvmBtn && evmScreen && backToDashEvmBtn) {
-    openEvmBtn.addEventListener('click', () => {
-      appScreen.style.display = 'none';
-      evmScreen.style.display = 'block';
-      window.scrollTo(0,0);
+    if (openEvmBtn && evmScreen && backToDashEvmBtn) {
+      openEvmBtn.addEventListener('click', () => {
+        appScreen.style.display = 'none';
+        evmScreen.style.display = 'block';
+        evmScreen.setAttribute('aria-hidden', 'false');
+        window.scrollTo(0, 0);
+      });
+      
+      backToDashEvmBtn.addEventListener('click', () => {
+        evmScreen.style.display = 'none';
+        evmScreen.setAttribute('aria-hidden', 'true');
+        appScreen.style.display = 'block';
+      });
+    }
+  };
+
+  initEvmExplainer();
+
+  // --- Premium Language Selection Logic ---
+  const langTrigger = document.getElementById('custom-language-trigger');
+  const langModal = document.getElementById('language-modal');
+  const langGrid = document.getElementById('language-grid');
+  const closeLangModal = document.getElementById('close-lang-modal');
+  const resetLangBtn = document.getElementById('reset-lang');
+
+  const languages = [
+    { code: 'hi', name: 'Hindi', native: 'हिन्दी' },
+    { code: 'bn', name: 'Bengali', native: 'বাংলা' },
+    { code: 'te', name: 'Telugu', native: 'తెలుగు' },
+    { code: 'mr', name: 'Marathi', native: 'मराठी' },
+    { code: 'ta', name: 'Tamil', native: 'தமிழ்' },
+    { code: 'ur', name: 'Urdu', native: 'اردو' },
+    { code: 'gu', name: 'Gujarati', native: 'ગુજરાતી' },
+    { code: 'kn', name: 'Kannada', native: 'ಕನ್ನಡ' },
+    { code: 'ml', name: 'Malayalam', native: 'മലയാളം' },
+    { code: 'pa', name: 'Punjabi', native: 'ਪੰਜਾਬੀ' },
+    { code: 'as', name: 'Assamese', native: 'অসমীয়া' },
+    { code: 'ks', name: 'Kashmiri', native: 'کٲشُر' },
+    { code: 'sd', name: 'Sindhi', native: 'سنڌي' },
+    { code: 'ne', name: 'Nepali', native: 'नेपाली' },
+    { code: 'or', name: 'Odia', native: 'ଓଡ଼ିଆ' },
+    { code: 'sa', name: 'Sanskrit', native: 'संस्कृतम्' }
+  ];
+
+  const switchLanguage = (code, name) => {
+    langModal.style.display = 'none'; // Close instantly
+    showToast(code ? `Translating to ${name}...` : 'Resetting to English...', false);
+
+    let attempts = 0;
+    const forceSwitch = () => {
+      const select = document.querySelector('.goog-te-combo');
+      if (select) {
+        select.value = code;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      } else if (attempts < 20) {
+        attempts++;
+        setTimeout(forceSwitch, 250);
+      }
+    };
+    forceSwitch();
+  };
+
+  if (langTrigger && langModal && langGrid) {
+    langTrigger.onclick = () => langModal.style.display = 'flex';
+    closeLangModal.onclick = () => langModal.style.display = 'none';
+    
+    languages.forEach(lang => {
+      const btn = document.createElement('button');
+      btn.style.cssText = `
+        padding: 1.5rem 1rem;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 24px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+      `;
+      btn.innerHTML = `
+        <div style="font-weight: 800; color: var(--chakra); font-size: 1.2rem; pointer-events: none;">${lang.native}</div>
+        <div style="font-size: 0.85rem; color: var(--text-light); font-weight: 600; pointer-events: none;">${lang.name}</div>
+      `;
+      
+      btn.onmouseenter = () => {
+        btn.style.borderColor = 'var(--saffron)';
+        btn.style.transform = 'translateY(-4px)';
+        btn.style.background = '#ffffff';
+        btn.style.boxShadow = '0 12px 24px rgba(0,0,0,0.06)';
+      };
+      btn.onmouseleave = () => {
+        btn.style.borderColor = '#e2e8f0';
+        btn.style.transform = 'translateY(0)';
+        btn.style.background = '#f8fafc';
+        btn.style.boxShadow = '0 4px 6px rgba(0,0,0,0.02)';
+      };
+      btn.onmousedown = () => btn.style.transform = 'scale(0.94)';
+      btn.onmouseup = () => btn.style.transform = 'translateY(-4px)';
+      
+      btn.onclick = () => switchLanguage(lang.code, lang.name);
+      langGrid.appendChild(btn);
     });
-    backToDashEvmBtn.addEventListener('click', () => {
-      evmScreen.style.display = 'none';
-      appScreen.style.display = 'block';
-    });
+
+    resetLangBtn.onclick = () => switchLanguage('', 'English');
   }
 
 });
