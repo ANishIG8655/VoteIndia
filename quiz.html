@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Great Democratic Quiz | VoteIndia</title>
+  <link rel="stylesheet" href="/src/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --saffron: #FF9933;
+      --white: #ffffff;
+      --green: #138808;
+      --chakra: #000080;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(180deg, rgba(255, 153, 51, 0.2) 0%, #ffffff 50%, rgba(19, 136, 8, 0.2) 100%);
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .quiz-card {
+      max-width: 800px;
+      width: 100%;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(20px);
+      border-radius: 2rem;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.1);
+      border: 1px solid white;
+      overflow: hidden;
+      animation: pageIn 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    @keyframes pageIn {
+      from { opacity: 0; transform: translateY(30px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .btn-option {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: var(--chakra);
+      padding: 1.25rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+    }
+    .btn-option:hover:not(:disabled) {
+      background: #f1f5f9;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .btn-option:disabled { cursor: default; }
+    .loader-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; overflow: hidden; margin-top: 1rem; }
+    .loader-fill { height: 100%; background: var(--saffron); transition: width 0.4s ease; }
+  </style>
+</head>
+<body>
+
+  <div class="quiz-card">
+    <!-- Welcome Section -->
+    <div id="welcome-view" style="padding: 5rem 3rem; text-align: center;">
+      <div style="font-size: 4rem; margin-bottom: 2rem; animation: float 3s infinite ease-in-out;">🇮🇳</div>
+      <h1 style="font-family: 'Outfit'; color: var(--chakra); font-size: 2.8rem; margin-bottom: 1rem; letter-spacing: -0.5px;">Electoral Excellence Quiz</h1>
+      <p style="color: #64748b; font-size: 1.1rem; margin-bottom: 3rem; max-width: 500px; margin-left: auto; margin-right: auto;">Master the knowledge of Indian Democracy. Enter your name to begin.</p>
+      
+      <div style="max-width: 400px; margin: 0 auto;">
+        <input type="text" id="username-input" placeholder="Your Name, Citizen" style="width: 100%; padding: 1.25rem; border: 2px solid #e2e8f0; border-radius: 16px; font-size: 1.1rem; text-align: center; margin-bottom: 1.5rem; outline: none; transition: border-color 0.3s; font-family: 'Inter';">
+        <button id="start-btn" style="width: 100%; padding: 1.25rem; background: var(--chakra); color: white; border: none; border-radius: 16px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.3s;">Start My Journey →</button>
+        <a href="/" style="display: block; margin-top: 1.5rem; color: #64748b; text-decoration: none; font-size: 0.9rem;">Return to Dashboard</a>
+      </div>
+    </div>
+
+    <!-- Quiz View (Hidden) -->
+    <div id="quiz-view" style="display: none;">
+      <div style="background: linear-gradient(135deg, var(--chakra), #4f46e5); color: white; padding: 3rem; text-align: center;">
+        <h2 id="current-q-num" style="font-family: 'Outfit'; font-size: 1.25rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.5rem; opacity: 0.8;">Question 1/10</h2>
+        <div style="display: flex; justify-content: center; align-items: center; gap: 2rem; margin: 1.5rem 0;">
+          <div style="font-size: 0.9rem; opacity: 0.9;">SCORE: <span id="current-score" style="font-weight: 800; color: var(--saffron); font-size: 1.5rem;">0</span></div>
+        </div>
+        <div class="loader-bar">
+          <div id="progress-fill" class="loader-fill" style="width: 10%;"></div>
+        </div>
+      </div>
+
+      <div style="padding: 4rem 3rem;">
+        <h3 id="question-text" style="font-size: 1.8rem; color: var(--chakra); margin-bottom: 2.5rem; line-height: 1.3; font-family: 'Outfit';">Loading...</h3>
+        <div id="options-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+          <!-- JS Injected -->
+        </div>
+
+        <div id="explanation-box" style="margin-top: 2.5rem; display: none;">
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 1.5rem; border-radius: 16px; color: #166534;">
+            <strong style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Democratic Insight:</strong>
+            <p id="explanation-text" style="font-size: 1rem; line-height: 1.6;"></p>
+            <button id="next-btn" style="margin-top: 1.5rem; background: var(--green); color: white; border: none; padding: 1rem 2rem; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%;">Next Question →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result View (Hidden) -->
+    <div id="result-view" style="display: none; padding: 5rem 3rem; text-align: center;">
+      <div style="font-size: 5rem; margin-bottom: 2rem;">🏆</div>
+      <h2 id="result-greeting" style="font-family: 'Outfit'; font-size: 2.5rem; color: var(--chakra); margin-bottom: 0.5rem;">Citizen, you are a...</h2>
+      <div id="rank-badge" style="background: var(--saffron); color: white; padding: 0.75rem 2rem; border-radius: 50px; display: inline-block; font-weight: 800; margin-bottom: 2rem; font-size: 1.25rem;">Democracy Scholar</div>
+      <p style="color: #64748b; font-size: 1.1rem; margin-bottom: 3rem;">Final Score: <span id="final-points" style="font-weight: 800; color: var(--chakra); font-size: 1.5rem;">0</span> / 1000</p>
+      
+      <div style="max-width: 400px; margin: 0 auto;">
+        <button onclick="location.reload()" style="width: 100%; padding: 1.25rem; background: var(--chakra); color: white; border: none; border-radius: 16px; font-size: 1.1rem; font-weight: 700; cursor: pointer; margin-bottom: 1rem;">Try Again</button>
+        <a href="/" style="display: block; width: 100%; padding: 1.25rem; border: 1px solid #e2e8f0; border-radius: 16px; color: #64748b; text-decoration: none; font-weight: 600;">Back to Dashboard</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/quiz.js"></script>
+</body>
+</html>
