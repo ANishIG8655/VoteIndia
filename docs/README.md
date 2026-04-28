@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="../public/logo.png" width="120" height="120" alt="VoteIndia Logo" style="border-radius: 50%;">
+</p>
+
 # 🗳️ VoteIndia: Democratic Intelligence Platform
 
 [![Vite](https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62D)](https://vitejs.dev/)
