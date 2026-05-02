@@ -314,6 +314,7 @@ header {
   background: var(--white);
   padding: 1rem 0;
   border-bottom: 1px solid #e2e8f0;
+}
 .assistant-footer { padding: 1.5rem; border-top: 1px solid #e2e8f0; }
 
 /* Assistant Typography Classes */
@@ -334,36 +335,37 @@ header {
 }
 
 .trend-ticker-item {
-  all: unset; /* Force reset browser defaults */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  margin-bottom: 1.25rem;
-  border-left: 6px solid var(--saffron);
-  border-right: 1px solid rgba(255, 255, 255, 0.3);
-  border-top: 1px solid rgba(255, 255, 255, 0.3);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.7);
+  all: unset !important; /* Force destroy browser legacy defaults */
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  margin-bottom: 1.25rem !important;
+  border-left: 6px solid var(--saffron) !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border-radius: 20px !important;
+  background: rgba(255, 255, 255, 0.9) !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  padding: 1.25rem;
-  width: calc(100% - 2.5rem);
-  box-sizing: border-box;
-  height: 110px;
-  cursor: pointer;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.05);
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  position: relative;
-  z-index: 1;
-  text-align: left;
-  font-family: 'Outfit', sans-serif;
+  padding: 1.5rem !important;
+  width: calc(100% - 3rem) !important;
+  box-sizing: border-box !important;
+  height: 110px !important;
+  cursor: pointer !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  position: relative !important;
+  z-index: 1 !important;
+  text-align: left !important;
+  font-family: 'Outfit', sans-serif !important;
 }
 
 .trend-ticker-item:hover {
-  background: rgba(255, 255, 255, 0.9);
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 15px 45px rgba(0,0,0,0.1);
+  background: #ffffff !important;
+  transform: translateY(-4px) scale(1.02) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08) !important;
+  border-right: 1px solid rgba(54, 42, 123, 0.1) !important;
 }
 
 .trend-ticker-item.paused { border-left-color: var(--chakra); }
