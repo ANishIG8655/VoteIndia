@@ -27,7 +27,7 @@ export const initTimeline = (container) => {
           <div style="font-size: 0.7rem; font-weight: 800; color: var(--saffron);">${m.label}</div>
           <div style="font-weight: 600; color: var(--chakra);">${m.event}</div>
           <div style="font-size: 0.75rem; font-weight: 700; color: ${isToday ? '#ef4444' : 'var(--text-light)'}">${statusText}</div>
-          ${!isPast ? `<button class="btn-tiny" onclick="window.addToCal('${m.event}', '${m.label}')" style="margin-top: 0.4rem; padding: 4px 8px; font-size: 0.6rem; border: 1px solid #e2e8f0; background: white; cursor: pointer; border-radius: 4px;">🗓️ Remind Me</button>` : ''}
+          ${!isPast ? `<button class="btn-tiny" onclick="window.addToCal('${m.event}', '${m.label}')" style="margin-top: 0.6rem; padding: 8px 12px; font-size: 0.75rem; border: 1px solid #e2e8f0; background: white; cursor: pointer; border-radius: 6px; font-weight: 600; color: var(--chakra);">🗓️ Remind Me</button>` : ''}
         </div>
       `;
     }).join('');

@@ -63,7 +63,7 @@ export const initTicker = (container) => {
   try {
     let isPaused = false;
     let topIndex = 0;
-    const itemHeight = 126; // Refined Height + Margin
+    const itemHeight = 130; // Further increased for premium spacing
     const trends = indiaElections.trends || [];
 
     if (trends.length === 0) return null;
