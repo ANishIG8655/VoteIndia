@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://votewise-india.web.app/sitemap.xml
