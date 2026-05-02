@@ -1,129 +1,134 @@
 /**
- * Trend Ticker Component & Animation Logic
+ * Ticker Module: Manages the 'Regional Trends' waterfall animation and data rendering.
+ * Optimized for Code Quality, Security, and Animation Performance.
  */
-
 import { indiaElections } from '../electionData.js';
+import { sanitizeHTML } from '../utils/sanitizer.js';
 
 /**
- * Creates a single ticker item node
+ * Creates a single ticker item node using sanitized data and CSS classes.
+ * @param {Object} trend - The trend data object (title, insight).
+ * @param {boolean} isPaused - Current pause state of the ticker.
+ * @returns {HTMLButtonElement} The constructed ticker item.
  */
-export const createTrendNode = (t, isPaused) => {
-  const div = document.createElement('button');
-  div.className = 'trend-ticker-item';
-  div.setAttribute('aria-label', `Read insight: ${t.title}`);
-  div.style.cssText = `
-    margin-bottom: 1rem; 
-    border: none; 
-    border-left: 4px solid ${isPaused ? 'var(--chakra)' : 'var(--saffron)'}; 
-    border-radius: 16px; 
-    background: white; 
-    padding: 1.25rem; 
-    width: 100%; 
-    box-sizing: border-box; 
-    height: 100px; 
-    cursor: pointer; 
-    box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: center; 
-    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); 
-    position: relative; 
-    z-index: 1;
-    text-align: left;
-    font-family: inherit;
-  `;
-  div.innerHTML = `
-    <div style="font-weight: 700; color: var(--chakra); font-size: 0.95rem; margin-bottom: 0.4rem; display: flex; align-items: center; justify-content: space-between;">
-      <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
-        <span class="live-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0;"></span>
-        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.title}</span>
+export const createTrendNode = (trend, isPaused) => {
+  const btn = document.createElement('button');
+  btn.className = `trend-ticker-item ${isPaused ? 'paused' : ''}`;
+  btn.setAttribute('aria-label', `Election Trend: ${trend.title}`);
+  
+  try {
+    const sTitle = sanitizeHTML(trend.title);
+    const sInsight = sanitizeHTML(trend.insight);
+
+    btn.innerHTML = `
+      <div class="trend-item-header">
+        <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+          <span class="live-dot" aria-hidden="true"></span>
+          <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${sTitle}</span>
+        </div>
       </div>
-      <span class="zoom-hint" style="font-size: 0.7rem; opacity: 0.4; font-weight: 400;">Click to Zoom</span>
-    </div>
-    <div style="font-size: 0.825rem; color: var(--text-light); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${t.insight}</div>
-  `;
+      <div class="trend-item-body">${sInsight}</div>
+    `;
 
-  div.onclick = (e) => {
-    e.stopPropagation();
-    const isZoomed = div.classList.contains('zoomed');
-    
-    // Clear other zoomed items
-    document.querySelectorAll('.trend-ticker-item.zoomed').forEach(el => el.classList.remove('zoomed'));
-    
-    if (!isZoomed) {
-      div.classList.add('zoomed');
-      div.dispatchEvent(new CustomEvent('pauseTicker', { bubbles: true, detail: { pause: true } }));
-    } else {
-      div.dispatchEvent(new CustomEvent('pauseTicker', { bubbles: true, detail: { pause: false } }));
-    }
-  };
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const isZoomed = btn.classList.contains('zoomed');
+      
+      // Clean up previous zooms
+      document.querySelectorAll('.trend-ticker-item.zoomed').forEach(el => el.classList.remove('zoomed'));
+      
+      if (!isZoomed) {
+        btn.classList.add('zoomed');
+        btn.dispatchEvent(new CustomEvent('pauseTicker', { bubbles: true, detail: { pause: true } }));
+      } else {
+        btn.dispatchEvent(new CustomEvent('pauseTicker', { bubbles: true, detail: { pause: false } }));
+      }
+    };
+  } catch (err) {
+    console.error("Failed to create trend node:", err);
+    btn.textContent = "Data Error";
+  }
 
-  return div;
+  return btn;
 };
 
 /**
- * Initializes the Ticker with Animation Loop
+ * Initializes the Ticker animation loop with a waterfall effect.
+ * @param {HTMLElement} container - The container element to inject nodes into.
+ * @returns {number|null} The interval ID or null if initialization failed.
  */
 export const initTicker = (container) => {
-  if (!container) return;
+  if (!container) return null;
   
-  let isPaused = false;
-  let topIndex = 0;
-  const itemHeight = 116;
+  try {
+    let isPaused = false;
+    let topIndex = 0;
+    const itemHeight = 126; // Refined Height + Margin
+    const trends = indiaElections.trends || [];
 
-  // Initial render
-  for(let i = 0; i < 3; i++) {
-    container.appendChild(createTrendNode(indiaElections.trends[i], isPaused));
-  }
+    if (trends.length === 0) return null;
 
-  const shiftTicker = () => {
-    if (isPaused || document.getElementById('app-screen').style.display !== 'block') return;
-
-    const items = container.querySelectorAll('.trend-ticker-item');
-    if (items.length < 3) return;
-
-    const lastItem = items[2];
-    lastItem.style.opacity = '0';
-    lastItem.style.transform = 'translateY(30px) scale(0.95)';
-
-    for(let i = 0; i < 2; i++) {
-      items[i].style.transform = `translateY(${itemHeight}px)`;
+    // Initial render of the first 3 items
+    for(let i = 0; i < Math.min(3, trends.length); i++) {
+      container.appendChild(createTrendNode(trends[i], isPaused));
     }
 
-    setTimeout(() => {
-      lastItem.remove();
-      topIndex = (topIndex - 1 + indiaElections.trends.length) % indiaElections.trends.length;
-      const newItem = createTrendNode(indiaElections.trends[topIndex], isPaused);
-      
-      const remainingItems = container.querySelectorAll('.trend-ticker-item');
-      remainingItems.forEach(el => {
-        el.style.transition = 'none';
-        el.style.transform = 'translateY(0)';
-      });
+    /**
+     * Executes the waterfall shift animation
+     */
+    const shiftTicker = () => {
+      const appVisible = document.getElementById('app-screen')?.style.display === 'block';
+      if (isPaused || !appVisible) return;
 
-      newItem.style.opacity = '0';
-      newItem.style.transform = `translateY(-${itemHeight}px) scale(0.95)`;
-      container.prepend(newItem);
+      const items = container.querySelectorAll('.trend-ticker-item');
+      if (items.length < 2) return;
 
-      void newItem.offsetWidth; // Reflow
+      const lastItem = items[items.length - 1];
+      lastItem.style.opacity = '0';
+      lastItem.style.transform = 'translateY(30px) scale(0.95)';
 
-      newItem.style.transition = 'all 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
-      newItem.style.opacity = '1';
-      newItem.style.transform = 'translateY(0) scale(1)';
-    }, 600);
-  };
+      // Shift existing items down
+      for(let i = 0; i < items.length - 1; i++) {
+        items[i].style.transform = `translateY(${itemHeight}px)`;
+      }
 
-  const tickerInterval = setInterval(shiftTicker, 3500);
+      setTimeout(() => {
+        lastItem.remove();
+        topIndex = (topIndex - 1 + trends.length) % trends.length;
+        const newItem = createTrendNode(trends[topIndex], isPaused);
+        
+        container.querySelectorAll('.trend-ticker-item').forEach(el => {
+          el.style.transition = 'none';
+          el.style.transform = 'translateY(0)';
+        });
 
-  // Expose pause/resume
-  container.addEventListener('mouseenter', () => { isPaused = true; });
-  container.addEventListener('mouseleave', () => { 
-    if (!container.querySelector('.zoomed')) isPaused = false; 
-  });
+        newItem.style.opacity = '0';
+        newItem.style.transform = `translateY(-${itemHeight}px) scale(0.95)`;
+        container.prepend(newItem);
 
-  container.addEventListener('pauseTicker', (e) => {
-    isPaused = e.detail.pause;
-  });
-  
-  return tickerInterval;
+        void newItem.offsetWidth; // Force Reflow
+
+        newItem.style.transition = 'all 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+        newItem.style.opacity = '1';
+        newItem.style.transform = 'translateY(0) scale(1)';
+      }, 600);
+    };
+
+    const tickerInterval = setInterval(shiftTicker, 3500);
+
+    // Event Delegation for pause/resume
+    container.addEventListener('mouseenter', () => { isPaused = true; });
+    container.addEventListener('mouseleave', () => { 
+      if (!container.querySelector('.zoomed')) isPaused = false; 
+    });
+
+    container.addEventListener('pauseTicker', (e) => {
+      isPaused = e.detail.pause;
+    });
+    
+    return tickerInterval;
+  } catch (err) {
+    console.error("Ticker initialization failed:", err);
+    return null;
+  }
 };

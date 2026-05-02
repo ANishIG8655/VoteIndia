@@ -1,90 +1,163 @@
 /**
- * Unified Assistant Component: UI + Logic
+ * Assistant Component: Manages AI interactions, chat UI, and electoral intelligence.
+ * Optimized for Code Quality, Security, and Accessibility.
  */
 import { indiaElections, modes, getPersonalizedData } from '../electionData.js';
+import { sanitizeHTML } from '../utils/sanitizer.js';
+import { Analytics } from '../services/AnalyticsService.js';
 
 /**
- * Parses markdown-lite
+ * Parses markdown-lite into sanitized HTML using predefined CSS classes.
+ * @param {string} text - The raw text to parse.
+ * @returns {string} The formatted HTML string.
  */
 const parseMarkdown = (text) => {
-  return text
-    .replace(/^### (.*?)$/gm, '<h3 style="color: var(--chakra); font-size: 1.1rem; margin: 1.2rem 0 0.6rem 0; border-bottom: 2px solid var(--saffron); padding-bottom: 0.2rem; display: block; font-family: \'Outfit\';">$1</h3>')
-    .replace(/^## (.*?)$/gm, '<h2 style="color: var(--chakra); font-size: 1.25rem; margin: 1.5rem 0 0.75rem 0; font-family: \'Outfit\';">$1</h2>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong style="color: var(--chakra); font-weight: 800;">$1</strong>')
-    .replace(/• (.*?)\n/g, '<div style="margin-bottom: 0.4rem; padding-left: 1rem; border-left: 2px solid var(--saffron);">$1</div>');
+  try {
+    return text
+      .replace(/^### (.*?)$/gm, '<h3 class="as-h3">$1</h3>')
+      .replace(/^## (.*?)$/gm, '<h2 class="as-h2">$1</h2>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="as-strong">$1</strong>')
+      .replace(/• (.*?)\n/g, '<div class="as-list-item">$1</div>');
+  } catch (err) {
+    console.error("Markdown parsing failed:", err);
+    return text;
+  }
 };
 
+/**
+ * Adds a message bubble to the assistant chat.
+ * @param {string} text - The message content.
+ * @param {boolean} [isUser=false] - Whether the message is from the user.
+ */
 export const addMessage = (text, isUser = false) => {
   const messages = document.getElementById('assistant-messages');
   if (!messages) return;
 
-  const msg = document.createElement('div');
-  msg.className = `chat-msg ${isUser ? 'user' : 'bot'}`;
-  msg.innerHTML = parseMarkdown(text);
-  messages.appendChild(msg);
-  messages.scrollTop = messages.scrollHeight;
-};
-
-export const showOptions = (options, profile) => {
-  const container = document.getElementById('quick-replies');
-  if (!container) return;
-  container.innerHTML = '';
-  options.forEach(opt => {
-    const btn = document.createElement('button');
-    btn.className = 'quick-reply-btn';
-    btn.textContent = opt.label || opt;
-    btn.onclick = () => {
-      addMessage(opt.label || opt, true);
-      handleAssistantInput(opt.id || opt, profile);
-    };
-    container.appendChild(btn);
-  });
-};
-
-/**
- * Master Input Handler
- */
-export const handleAssistantInput = (id, profile) => {
-  if (id === 'process') {
-    addMessage("The election process in India is managed by the ECI. Let's walk through it.");
-    renderExplainer(0, profile);
-  } else if (id.startsWith('explainer_step_')) {
-    renderExplainer(parseInt(id.split('_').pop()), profile);
-  } else if (id === 'my_constituency') {
-    if (!profile || !profile.state) {
-      addMessage("⚠️ Please update your profile to see personalized data.");
-    } else {
-      const data = getPersonalizedData(profile.state, profile.constituency);
-      addMessage(`📍 **Insights for ${profile.constituency}**\n\n${data.prospects}`);
-      showOptions([{id: 'manifesto', label: 'View Manifestos'}], profile);
-    }
-  } else if (id === 'past') {
-    addMessage(`### 🏆 Past Election Results\n\n**2024 General Election**\n• Status: Completed\n• Majority: NDA Coalition (293 seats)\n• Oppn: INDIA Alliance (234 seats)\n\n**2019 General Election**\n• Status: Completed\n• Majority: BJP-led NDA (353 seats)\n• Turnout: 67.4% (Highest ever)`);
-    showOptions([{id: 'menu', label: 'Back to Menu'}], profile);
-  } else if (id === 'upcoming') {
-    addMessage(`### 📅 Upcoming Elections 2026\n\n**State Assemblies (May 2026)**\n• Tamil Nadu (234 Seats)\n• West Bengal (294 Seats)\n• Kerala (140 Seats)\n• Assam (126 Seats)\n\n**General Election**\n• Expected: 2029`);
-    showOptions([{id: 'menu', label: 'Back to Menu'}], profile);
-  } else if (id === 'trends') {
-    addMessage(`### 📈 Current Trend Analysis\n\n**1. Youth Surge**\nFirst-time voters (18-22) are prioritizing job security over traditional identity politics.\n\n**2. Women Voters**\nSilent voting bloc determining results through participation in welfare-driven schemes.\n\n**3. Federalism**\nRegional parties strengthening their hold in southern and eastern states.`);
-    showOptions([{id: 'menu', label: 'Back to Menu'}], profile);
-  } else if (id === 'manifesto') {
-    addMessage(`### 📑 Manifesto Comparison 2026\n\n**BJP (Nationalist Platform)**\n• Focus: Infrastructure (Bullet Trains, Highways)\n• Welfare: Free Ration & Ayushman Bharat Expansion\n\n**INC (Justice Platform)**\n• Focus: Job Guarantees (Apprenticeship Rights)\n• Welfare: Financial aid for women & Caste Census\n\n**Regional Blocs (Federal Focus)**\n• Focus: State autonomy & Regional Language promotion\n• Welfare: Direct cash transfers for farmers`);
-    showOptions([{id: 'menu', label: 'Back to Menu'}], profile);
-  } else if (id === 'menu') {
-    addMessage("How else can I help you today?");
-    showOptions(modes, profile);
-  } else {
-    addMessage("I can help with voting, results, or manifestos.");
-    showOptions(modes, profile);
+  try {
+    const msg = document.createElement('div');
+    msg.className = `chat-msg ${isUser ? 'user' : 'bot'}`;
+    
+    // Security: User input must be sanitized; bot responses (trusted) are parsed.
+    const content = isUser ? sanitizeHTML(text) : parseMarkdown(text);
+    msg.innerHTML = content;
+    
+    messages.appendChild(msg);
+    messages.scrollTop = messages.scrollHeight;
+    
+    if (isUser) Analytics.trackAssistantAsk(text.substring(0, 50));
+  } catch (err) {
+    console.error("Failed to add message:", err);
   }
 };
 
+/**
+ * Renders quick reply options as buttons.
+ * @param {Array<Object|string>} options - List of option objects or strings.
+ * @param {Object} [profile] - The current user's profile.
+ */
+export const showOptions = (options, profile) => {
+  const container = document.getElementById('quick-replies');
+  if (!container) return;
+
+  try {
+    container.innerHTML = '';
+    options.forEach(opt => {
+      const label = opt.label || opt;
+      const id = opt.id || opt;
+      
+      const btn = document.createElement('button');
+      btn.className = 'quick-reply-btn';
+      btn.textContent = label;
+      btn.setAttribute('aria-label', `Ask about ${label}`);
+      
+      btn.onclick = () => {
+        addMessage(label, true);
+        handleAssistantInput(id, profile);
+      };
+      container.appendChild(btn);
+    });
+  } catch (err) {
+    console.error("Failed to render options:", err);
+  }
+};
+
+/**
+ * Dispatches assistant inputs to specific logic handlers.
+ * @param {string} id - The command ID or search term.
+ * @param {Object} [profile] - User profile data.
+ */
+export const handleAssistantInput = (id, profile) => {
+  const handlers = {
+    'process': () => {
+      addMessage("The election process in India is managed by the ECI. Let's walk through it.");
+      renderExplainer(0, profile);
+    },
+    'my_constituency': () => {
+      if (!profile?.state) {
+        addMessage("⚠️ Please update your profile to see personalized data.");
+      } else {
+        const data = getPersonalizedData(profile.state, profile.constituency);
+        addMessage(`📍 **Insights for ${profile.constituency}**\n\n${data.prospects}`);
+        showOptions([{id: 'manifesto', label: 'View Manifestos'}], profile);
+      }
+    },
+    'past': () => {
+      addMessage(`### 🏆 Past Election Results\n\n**2024 General Election**\n• Status: Completed\n• Majority: NDA Coalition (293 seats)\n• Oppn: INDIA Alliance (234 seats)\n\n**2019 General Election**\n• Status: Completed\n• Majority: BJP-led NDA (353 seats)`);
+      showOptions([{id: 'menu', label: 'Back to Menu'}], profile);
+    },
+    'upcoming': () => {
+      addMessage(`### 📅 Upcoming Elections 2026\n\n**State Assemblies (May 2026)**\n• Tamil Nadu (234 Seats)\n• West Bengal (294 Seats)\n• Kerala (140 Seats)`);
+      showOptions([{id: 'menu', label: 'Back to Menu'}], profile);
+    },
+    'trends': () => {
+      addMessage(`### 📈 Current Trend Analysis\n\n**1. Youth Surge**\nFirst-time voters prioritizing job security.\n**2. Women Voters**\nSilent voting bloc determining results.`);
+      showOptions([{id: 'menu', label: 'Back to Menu'}], profile);
+    },
+    'manifesto': () => {
+      addMessage(`### 📑 Manifesto Comparison 2026\n\n**Nationalist Platform**\n• Focus: Infrastructure & Digital Growth\n**Justice Platform**\n• Focus: Job Guarantees & Social Safety`);
+      showOptions([{id: 'menu', label: 'Back to Menu'}], profile);
+    },
+    'menu': () => {
+      addMessage("How else can I help you today?");
+      showOptions(modes, profile);
+    }
+  };
+
+  try {
+    if (id.startsWith('explainer_step_')) {
+      const step = parseInt(id.split('_').pop());
+      renderExplainer(step, profile);
+    } else if (handlers[id]) {
+      handlers[id]();
+    } else {
+      handlers['menu']();
+    }
+  } catch (err) {
+    console.error("Input handling error:", err);
+    handlers['menu']();
+  }
+};
+
+/**
+ * Renders a specific step of the electoral process explainer.
+ * @param {number} index - The current step index.
+ * @param {Object} [profile] - User profile.
+ */
 const renderExplainer = (index, profile) => {
-  const p = indiaElections.process[index];
-  addMessage(`### Step ${index+1}: ${p.step}\n${p.what}`);
-  const next = [];
-  if (index < indiaElections.process.length - 1) next.push({id: `explainer_step_${index+1}`, label: 'Next Step'});
-  next.push({id: 'process', label: 'Restart'});
-  next.push({id: 'menu', label: 'Back to Menu'});
-  showOptions(next, profile);
+  try {
+    const p = indiaElections.process[index];
+    if (!p) return;
+
+    addMessage(`### Step ${index+1}: ${p.step}\n${p.what}`);
+    
+    const nextOptions = [];
+    if (index < indiaElections.process.length - 1) {
+      nextOptions.push({id: `explainer_step_${index+1}`, label: 'Next Step'});
+    }
+    
+    nextOptions.push({id: 'process', label: 'Restart Process'}, {id: 'menu', label: 'Main Menu'});
+    showOptions(nextOptions, profile);
+  } catch (err) {
+    console.error("Explainer render error:", err);
+  }
 };

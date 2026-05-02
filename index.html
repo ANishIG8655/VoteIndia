@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <title>VoteWise India | Premium Election Intelligence Dashboard</title>
   
+  <!-- Security: Content Security Policy -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://translate.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://www.gstatic.com https://translate.google.com; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://www.google-analytics.com;">
+
   <!-- SEO Optimization -->
   <meta name="description" content="VoteWise India provides real-time election results, candidate KYC data, and interactive voting explainers. Stay informed with India's most advanced election dashboard.">
   <meta name="keywords" content="India Elections 2026, Lok Sabha Results, Vote India, Election Dashboard, KYC Candidates">
@@ -14,7 +17,11 @@
   <meta property="og:type" content="website">
 
   <!-- PWA & Mobile Support -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="var(--chakra)">
+  <link rel="apple-touch-icon" href="/logo.png">
   <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" href="/logo.png">
   <meta name="theme-color" content="#000080">
   <link rel="apple-touch-icon" href="/logo.png">
   
@@ -45,6 +52,28 @@
     }
   }
   </script>
+
+  <!-- Google Translate Initialization -->
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+
+    // Global trigger for custom UI
+    window.triggerTranslate = () => {
+      const menu = document.querySelector('.goog-te-menu-value');
+      if (menu) {
+        menu.querySelector('span')?.click();
+      } else {
+        alert("Translation engine is loading. Please try again in a moment.");
+      }
+    };
+  </script>
+  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -91,19 +120,20 @@
   <!-- Global Splash Screen -->
   <div id="global-splash" class="splash-screen">
     <div class="splash-content">
-      <img src="/logo.png" alt="VoteIndia Logo" class="splash-logo">
-      <h1 class="splash-title">VoteIndia</h1>
+      <img src="/logo.png" alt="VoteWise India Logo" class="splash-logo">
+      <h1 class="splash-title">VoteWise India</h1>
       <p class="splash-text">Optimizing assets and preparing secure environment...</p>
       <div class="loader-bar" style="max-width: 300px; margin: 1.5rem auto;"><div id="splash-progress" style="width: 0%; height: 100%; background: var(--green); transition: width 4s linear;"></div></div>
     </div>
   </div>
 
   <!-- Auth Screen -->
-  <div id="auth-screen" class="screen" style="display: none;">
+  <section id="auth-screen" style="display: none;" aria-labelledby="auth-title">
+    <h1 id="auth-title" class="sr-only">VoteWise India Login</h1>
     <div class="auth-card">
       <div class="auth-header">
-        <img src="/logo.png" alt="VoteIndia Logo" style="width: 100px; height: 100px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 0.5rem; border: 3px solid white;">
-        <h1>VoteIndia</h1>
+        <img src="/logo.png" alt="VoteWise India Logo" style="width: 100px; height: 100px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 0.5rem; border: 3px solid white;">
+        <h1>VoteWise India</h1>
         <p>Your portal to democratic intelligence</p>
       </div>
       
@@ -151,7 +181,7 @@
 
       <p id="auth-message" class="error-msg"></p>
     </div>
-  </div>
+  </section>
 
   <!-- DigiLocker Mock Modal -->
   <div id="digilocker-modal" class="modal-overlay" style="display: none;">
@@ -217,7 +247,7 @@
           <span>VoteWise</span>
         </div>
         <div class="user-profile" style="display: flex; align-items: center; gap: 1rem;">
-          <button id="custom-language-trigger" class="btn btn-sm" aria-label="Select Language" style="background: rgba(54, 42, 123, 0.05); border: 1px solid rgba(54, 42, 123, 0.1); border-radius: 50px; display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--chakra);">
+          <button id="custom-language-trigger" class="btn btn-sm" aria-label="Select Language" onclick="window.triggerTranslate()" style="background: rgba(54, 42, 123, 0.05); border: 1px solid rgba(54, 42, 123, 0.1); border-radius: 50px; display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--chakra);">
             <span>🌐</span> Select Language
           </button>
           <div id="google_translate_element" aria-hidden="true" style="position: absolute; opacity: 0; pointer-events: none; visibility: hidden;"></div>
@@ -239,7 +269,7 @@
             📍 Andaman & Nicobar Islands
           </div>
           <div class="glass-hero">
-            <h1 id="dash-title">Satyameva Jayate</h1>
+            <h1 id="dash-title" aria-label="VoteWise India Election Dashboard">Satyameva Jayate</h1>
             <p>Welcome to your election command center. Explore trends, manifestos, and upcoming milestones.</p>
             <div class="quick-stats" role="list">
               <div class="stat" role="listitem"><span class="stat-counter" data-target="543">0</span> Seats</div>
@@ -584,7 +614,7 @@
   <div id="assistant-panel">
     <div class="assistant-header">
       <div>
-        <h3 style="margin: 0; font-family: 'Outfit'; font-size: 1.4rem; font-weight: 800; letter-spacing: 0.5px;">VoteIndia AI</h3>
+        <h3 style="margin: 0; font-family: 'Outfit'; font-size: 1.4rem; font-weight: 800; letter-spacing: 0.5px;">VoteWise India AI</h3>
         <p style="margin: 0; font-size: 0.75rem; opacity: 0.9; font-weight: 500;">Verified Election Intelligence</p>
       </div>
       <button id="close-assistant" aria-label="Close Assistant" style="background: rgba(255,255,255,0.2); border: none; width: 32px; height: 32px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: transform 0.3s;">×</button>
