@@ -467,6 +467,14 @@ header {
   flex-direction: column;
 }
 
+#trends-container {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+#trends-container::-webkit-scrollbar {
+  display: none;
+}
+
 /* Premium Scrollbar */
 .widget-content::-webkit-scrollbar {
   width: 6px;

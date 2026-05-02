@@ -21,14 +21,8 @@ function initHeroEffects() {
   const hero = document.getElementById('dynamic-hero');
   const locationTag = document.getElementById('hero-location-badge');
   const backgrounds = [
-    { src: '/loc_andaman.png', name: 'Andaman & Nicobar Islands' },
-    { src: '/loc_hampi.png', name: 'Hampi, Karnataka' },
-    { src: '/loc_meghalaya.png', name: 'Meghalaya, Northeast India' },
-    { src: '/loc_munnar.png', name: 'Munnar, Kerala' },
-    { src: '/loc_rann.png', name: 'Rann of Kutch, Gujarat' },
-    { src: '/loc_spiti.png', name: 'Spiti Valley, Himachal Pradesh' },
-    { src: '/loc_valley.png', name: 'Valley of Flowers, Uttarakhand' },
-    { src: '/loc_varanasi.png', name: 'Varanasi, Uttar Pradesh' }
+    { src: '/loc_varanasi.png', name: 'Varanasi, Uttar Pradesh' },
+    { src: '/loc_hampi.png', name: 'Hampi, Karnataka' }
   ];
   let currentIdx = 0;
   

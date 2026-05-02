@@ -10,6 +10,24 @@ import { addMessage, showOptions } from './components/Assistant.js';
 // Global DB
 window.db = db;
 
+// PWA: Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('SW Registered'))
+      .catch(err => console.log('SW Reg Failed', err));
+  });
+}
+
+// Global Connection Monitoring
+window.addEventListener('online', () => showToast("🌐 Connection Restored. Updating live data...", false));
+window.addEventListener('offline', () => {
+  showToast("📡 Connection Lost. Switching to Offline Mode.", true);
+  setTimeout(() => {
+    window.location.href = '/offline.html';
+  }, 1000);
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   const appScreen = document.getElementById('app-screen');
   const authScreen = document.getElementById('auth-screen');
